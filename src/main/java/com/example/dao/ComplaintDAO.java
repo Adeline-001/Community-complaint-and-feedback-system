@@ -71,6 +71,51 @@ public class ComplaintDAO {
         }
     }
 
+    public Complaint getComplaintById(int id) {
+        String query = "SELECT c.*, cat.name as category_name FROM complaints c " +
+                "JOIN categories cat ON c.category_id = cat.id " +
+                "WHERE c.id = ?";
+        try (Connection conn = DBConnection.getConnection();
+                PreparedStatement stmt = conn.prepareStatement(query)) {
+            stmt.setInt(1, id);
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next()) {
+                return mapResultSetToComplaint(rs);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    public boolean updateComplaint(Complaint complaint) {
+        String query = "UPDATE complaints SET subject = ?, description = ? WHERE id = ? AND user_id = ?";
+        try (Connection conn = DBConnection.getConnection();
+                PreparedStatement stmt = conn.prepareStatement(query)) {
+            stmt.setString(1, complaint.getSubject());
+            stmt.setString(2, complaint.getDescription());
+            stmt.setInt(3, complaint.getId());
+            stmt.setInt(4, complaint.getUserId());
+            return stmt.executeUpdate() > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    public boolean deleteComplaint(int id, int userId) {
+        String query = "DELETE FROM complaints WHERE id = ? AND user_id = ?";
+        try (Connection conn = DBConnection.getConnection();
+                PreparedStatement stmt = conn.prepareStatement(query)) {
+            stmt.setInt(1, id);
+            stmt.setInt(2, userId);
+            return stmt.executeUpdate() > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
     private Complaint mapResultSetToComplaint(ResultSet rs) throws SQLException {
         Complaint c = new Complaint();
         c.setId(rs.getInt("id"));

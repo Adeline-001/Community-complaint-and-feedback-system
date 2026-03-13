@@ -28,4 +28,18 @@ public class AdminDAO {
         }
         return null;
     }
+
+    public boolean registerAdmin(Admin admin, String password) {
+        String query = "INSERT INTO admins (name, email, password) VALUES (?, ?, ?)";
+        try (Connection conn = DBConnection.getConnection();
+                PreparedStatement stmt = conn.prepareStatement(query)) {
+            stmt.setString(1, admin.getName());
+            stmt.setString(2, admin.getEmail());
+            stmt.setString(3, password);
+            return stmt.executeUpdate() > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
 }
