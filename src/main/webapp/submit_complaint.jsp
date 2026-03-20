@@ -8,7 +8,7 @@
             <head>
                 <meta charset="UTF-8">
                 <title>Submit Complaint | Citizen Voice</title>
-                <link rel="stylesheet" href="css/style.css">
+                <link rel="stylesheet" href="css/style.css?v=1.1">
             </head>
 
             <body>

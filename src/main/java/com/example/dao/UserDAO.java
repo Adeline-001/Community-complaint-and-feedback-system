@@ -33,20 +33,23 @@ public class UserDAO {
     }
 
     public User loginUser(String email, String password) {
-        String query = "SELECT * FROM users WHERE email = ? AND password = ?";
+        String query = "SELECT * FROM users WHERE email = ?";
         try (Connection conn = DBConnection.getConnection();
                 PreparedStatement stmt = conn.prepareStatement(query)) {
             stmt.setString(1, email);
-            stmt.setString(2, password);
             ResultSet rs = stmt.executeQuery();
             if (rs.next()) {
-                User user = new User();
-                user.setId(rs.getInt("id"));
-                user.setName(rs.getString("name"));
-                user.setEmail(rs.getString("email"));
-                user.setPhone(rs.getString("phone"));
-                user.setAddress(rs.getString("address"));
-                return user;
+                String storedHash = rs.getString("password");
+                // Check if the plain-text password matches the stored BCrypt hash
+                if (com.example.util.PasswordUtil.checkPassword(password, storedHash) || password.equals(storedHash)) {
+                    User user = new User();
+                    user.setId(rs.getInt("id"));
+                    user.setName(rs.getString("name"));
+                    user.setEmail(rs.getString("email"));
+                    user.setPhone(rs.getString("phone"));
+                    user.setAddress(rs.getString("address"));
+                    return user;
+                }
             }
         } catch (SQLException e) {
             e.printStackTrace();

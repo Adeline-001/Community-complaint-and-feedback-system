@@ -10,18 +10,20 @@ import java.sql.SQLException;
 
 public class AdminDAO {
     public Admin loginAdmin(String email, String password) {
-        String query = "SELECT * FROM admins WHERE email = ? AND password = ?";
+        String query = "SELECT * FROM admins WHERE email = ?";
         try (Connection conn = DBConnection.getConnection();
                 PreparedStatement stmt = conn.prepareStatement(query)) {
             stmt.setString(1, email);
-            stmt.setString(2, password);
             ResultSet rs = stmt.executeQuery();
             if (rs.next()) {
-                Admin admin = new Admin();
-                admin.setId(rs.getInt("id"));
-                admin.setName(rs.getString("name"));
-                admin.setEmail(rs.getString("email"));
-                return admin;
+                String storedHash = rs.getString("password");
+                if (com.example.util.PasswordUtil.checkPassword(password, storedHash) || password.equals(storedHash)) {
+                    Admin admin = new Admin();
+                    admin.setId(rs.getInt("id"));
+                    admin.setName(rs.getString("name"));
+                    admin.setEmail(rs.getString("email"));
+                    return admin;
+                }
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -29,13 +31,14 @@ public class AdminDAO {
         return null;
     }
 
-    public boolean registerAdmin(Admin admin, String password) {
+    public boolean registerAdmin(Admin admin, String plainPassword) {
+        String hashedPassword = com.example.util.PasswordUtil.hashPassword(plainPassword);
         String query = "INSERT INTO admins (name, email, password) VALUES (?, ?, ?)";
         try (Connection conn = DBConnection.getConnection();
                 PreparedStatement stmt = conn.prepareStatement(query)) {
             stmt.setString(1, admin.getName());
             stmt.setString(2, admin.getEmail());
-            stmt.setString(3, password);
+            stmt.setString(3, hashedPassword);
             return stmt.executeUpdate() > 0;
         } catch (SQLException e) {
             e.printStackTrace();

@@ -11,6 +11,10 @@
     <body style="display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 2rem;">
         <div class="glass-container" style="width: 100%; max-width: 500px;">
             <h2 style="margin-bottom: 2rem; text-align: center;">Join the Community</h2>
+            
+            <% if("exists".equals(request.getParameter("error"))) { %>
+                <p style="color: var(--danger); text-align: center; margin-bottom: 1rem;">Email already registered or registration failed.</p>
+            <% } %>
 
             <form action="auth" method="post">
                 <input type="hidden" name="action" value="register">

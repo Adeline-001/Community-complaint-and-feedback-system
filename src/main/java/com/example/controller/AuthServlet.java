@@ -32,7 +32,8 @@ public class AuthServlet extends HttpServlet {
             User user = new User();
             user.setName(name);
             user.setEmail(email);
-            user.setPassword(password);
+            // Hash the password before saving for security!
+            user.setPassword(com.example.util.PasswordUtil.hashPassword(password));
             user.setPhone(phone);
             user.setAddress(address);
 
@@ -74,8 +75,16 @@ public class AuthServlet extends HttpServlet {
                 Admin admin = adminDAO.loginAdmin(email, password);
                 if (admin != null) {
                     System.out.println("[DEBUG] Admin login success: " + email);
+                    // 1. Core HTTP Session for JSP
                     HttpSession session = request.getSession();
                     session.setAttribute("admin", admin);
+                    // 2. Generate and store JWT token for security phase requirements
+                    String token = com.example.util.JwtUtil.generateToken(admin.getEmail(), "admin", admin.getId());
+                    jakarta.servlet.http.Cookie cookie = new jakarta.servlet.http.Cookie("jwt_token", token);
+                    cookie.setPath("/");
+                    cookie.setMaxAge(86400); // 24 hours
+                    response.addCookie(cookie);
+                    
                     response.sendRedirect("admin_dashboard.jsp");
                 } else {
                     System.out.println("[DEBUG] Admin login failed: " + email + " (Invalid credentials)");
@@ -85,13 +94,42 @@ public class AuthServlet extends HttpServlet {
                 User user = userDAO.loginUser(email, password);
                 if (user != null) {
                     System.out.println("[DEBUG] Citizen login success: " + email);
+                    // 1. Core HTTP Session for JSP
                     HttpSession session = request.getSession();
                     session.setAttribute("user", user);
+                    // 2. Generate and store JWT token for security phase requirements
+                    String token = com.example.util.JwtUtil.generateToken(user.getEmail(), "user", user.getId());
+                    jakarta.servlet.http.Cookie cookie = new jakarta.servlet.http.Cookie("jwt_token", token);
+                    cookie.setPath("/");
+                    cookie.setMaxAge(86400); // 24 hours
+                    response.addCookie(cookie);
+
                     response.sendRedirect("dashboard.jsp");
                 } else {
                     System.out.println("[DEBUG] Citizen login failed: " + email + " (Invalid credentials)");
                     response.sendRedirect("login.jsp?error=invalid");
                 }
+            }
+        } else if ("api-login".equals(action)) {
+            // Pure REST API Endpoint for the Backend Submission (No Frontend HTML/Redirects)
+            String email = request.getParameter("email");
+            String password = request.getParameter("password");
+            
+            response.setContentType("application/json");
+            response.setCharacterEncoding("UTF-8");
+            
+            User user = userDAO.loginUser(email, password);
+            Admin admin = adminDAO.loginAdmin(email, password);
+            
+            if (admin != null) {
+                String token = com.example.util.JwtUtil.generateToken(admin.getEmail(), "admin", admin.getId());
+                response.getWriter().write("{\"status\":\"success\", \"role\":\"admin\", \"token\":\"" + token + "\"}");
+            } else if (user != null) {
+                String token = com.example.util.JwtUtil.generateToken(user.getEmail(), "user", user.getId());
+                response.getWriter().write("{\"status\":\"success\", \"role\":\"user\", \"token\":\"" + token + "\"}");
+            } else {
+                response.setStatus(401);
+                response.getWriter().write("{\"status\":\"error\", \"message\":\"Invalid credentials\"}");
             }
         } else if ("list-users".equals(action)) {
             sendUserList(response);
@@ -117,6 +155,13 @@ public class AuthServlet extends HttpServlet {
         if (session != null) {
             session.invalidate();
         }
+        
+        // Remove JWT cookie on logout
+        jakarta.servlet.http.Cookie cookie = new jakarta.servlet.http.Cookie("jwt_token", "");
+        cookie.setPath("/");
+        cookie.setMaxAge(0);
+        response.addCookie(cookie);
+
         response.sendRedirect("landing.jsp");
     }
 
