@@ -58,17 +58,66 @@ public class ComplaintDAO {
         return complaints;
     }
 
-    public boolean updateStatus(int complaintId, String status) {
-        String query = "UPDATE complaints SET status = ? WHERE id = ?";
+    public boolean updateStatus(int complaintId, String status, String notes) {
+        String query = "UPDATE complaints SET status = ?, resolution_notes = ?, resolved_at = ? WHERE id = ?";
         try (Connection conn = DBConnection.getConnection();
                 PreparedStatement stmt = conn.prepareStatement(query)) {
             stmt.setString(1, status);
-            stmt.setInt(2, complaintId);
+            stmt.setString(2, notes);
+            if ("Resolved".equals(status) || "Rejected".equals(status)) {
+                stmt.setTimestamp(3, new Timestamp(System.currentTimeMillis()));
+            } else {
+                stmt.setNull(3, Types.TIMESTAMP);
+            }
+            stmt.setInt(4, complaintId);
             return stmt.executeUpdate() > 0;
         } catch (SQLException e) {
             e.printStackTrace();
             return false;
         }
+    }
+
+    public List<Complaint> searchComplaints(String keyword) {
+        List<Complaint> complaints = new ArrayList<>();
+        String query = "SELECT c.*, cat.name as category_name, u.name as user_name FROM complaints c " +
+                "JOIN categories cat ON c.category_id = cat.id " +
+                "JOIN users u ON c.user_id = u.id " +
+                "WHERE c.subject LIKE ? OR u.name LIKE ? OR c.description LIKE ? " +
+                "ORDER BY c.created_at DESC";
+        try (Connection conn = DBConnection.getConnection();
+                PreparedStatement stmt = conn.prepareStatement(query)) {
+            String searchPattern = "%" + keyword + "%";
+            stmt.setString(1, searchPattern);
+            stmt.setString(2, searchPattern);
+            stmt.setString(3, searchPattern);
+            ResultSet rs = stmt.executeQuery();
+            while (rs.next()) {
+                complaints.add(mapResultSetToComplaint(rs));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return complaints;
+    }
+
+    public List<Complaint> filterByStatus(String status) {
+        List<Complaint> complaints = new ArrayList<>();
+        String query = "SELECT c.*, cat.name as category_name, u.name as user_name FROM complaints c " +
+                "JOIN categories cat ON c.category_id = cat.id " +
+                "JOIN users u ON c.user_id = u.id " +
+                "WHERE c.status = ? " +
+                "ORDER BY c.created_at DESC";
+        try (Connection conn = DBConnection.getConnection();
+                PreparedStatement stmt = conn.prepareStatement(query)) {
+            stmt.setString(1, status);
+            ResultSet rs = stmt.executeQuery();
+            while (rs.next()) {
+                complaints.add(mapResultSetToComplaint(rs));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return complaints;
     }
 
     public Complaint getComplaintById(int id) {
@@ -89,7 +138,7 @@ public class ComplaintDAO {
     }
 
     public boolean updateComplaint(Complaint complaint) {
-        String query = "UPDATE complaints SET subject = ?, description = ? WHERE id = ? AND user_id = ?";
+        String query = "UPDATE complaints SET subject = ?, description = ? WHERE id = ? AND user_id = ? AND status = 'Pending'";
         try (Connection conn = DBConnection.getConnection();
                 PreparedStatement stmt = conn.prepareStatement(query)) {
             stmt.setString(1, complaint.getSubject());
@@ -104,7 +153,7 @@ public class ComplaintDAO {
     }
 
     public boolean deleteComplaint(int id, int userId) {
-        String query = "DELETE FROM complaints WHERE id = ? AND user_id = ?";
+        String query = "DELETE FROM complaints WHERE id = ? AND user_id = ? AND status = 'Pending'";
         try (Connection conn = DBConnection.getConnection();
                 PreparedStatement stmt = conn.prepareStatement(query)) {
             stmt.setInt(1, id);
@@ -124,6 +173,8 @@ public class ComplaintDAO {
         c.setSubject(rs.getString("subject"));
         c.setDescription(rs.getString("description"));
         c.setStatus(rs.getString("status"));
+        c.setResolutionNotes(rs.getString("resolution_notes"));
+        c.setResolvedAt(rs.getTimestamp("resolved_at"));
         c.setCreatedAt(rs.getTimestamp("created_at"));
         c.setUpdatedAt(rs.getTimestamp("updated_at"));
         c.setCategoryName(rs.getString("category_name"));

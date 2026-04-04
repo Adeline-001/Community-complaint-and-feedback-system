@@ -11,7 +11,7 @@
     int id = Integer.parseInt(request.getParameter("id"));
     ComplaintDAO dao = new ComplaintDAO();
     Complaint complaint = dao.getComplaintById(id);
-    if (complaint == null || complaint.getUserId() != user.getId()) {
+    if (complaint == null || complaint.getUserId() != user.getId() || !"Pending".equalsIgnoreCase(complaint.getStatus())) {
         response.sendRedirect("dashboard.jsp");
         return;
     }

@@ -11,6 +11,8 @@ public class Complaint {
     private String status;
     private Timestamp createdAt;
     private Timestamp updatedAt;
+    private String resolutionNotes;
+    private Timestamp resolvedAt;
 
     // Join fields for display
     private String userName;
@@ -106,5 +108,21 @@ public class Complaint {
 
     public void setDepartmentName(String departmentName) {
         this.departmentName = departmentName;
+    }
+
+    public String getResolutionNotes() {
+        return resolutionNotes;
+    }
+
+    public void setResolutionNotes(String resolutionNotes) {
+        this.resolutionNotes = resolutionNotes;
+    }
+
+    public Timestamp getResolvedAt() {
+        return resolvedAt;
+    }
+
+    public void setResolvedAt(Timestamp resolvedAt) {
+        this.resolvedAt = resolvedAt;
     }
 }

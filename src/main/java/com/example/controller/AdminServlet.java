@@ -29,8 +29,9 @@ public class AdminServlet extends HttpServlet {
         if ("updateStatus".equals(action)) {
             int id = Integer.parseInt(request.getParameter("id"));
             String status = request.getParameter("status");
+            String notes = request.getParameter("notes");
 
-            if (complaintDAO.updateStatus(id, status)) {
+            if (complaintDAO.updateStatus(id, status, notes)) {
                 response.sendRedirect("admin_dashboard.jsp?msg=updated");
             } else {
                 response.sendRedirect("admin_dashboard.jsp?error=failed");

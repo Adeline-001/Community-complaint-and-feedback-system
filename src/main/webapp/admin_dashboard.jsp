@@ -10,7 +10,17 @@
         return; 
     } 
     ComplaintDAO dao = new ComplaintDAO();
-    List<Complaint> complaints = dao.getAllComplaints();
+    String searchQuery = request.getParameter("search");
+    String statusFilter = request.getParameter("filter");
+    List<Complaint> complaints;
+
+    if (searchQuery != null && !searchQuery.trim().isEmpty()) {
+        complaints = dao.searchComplaints(searchQuery);
+    } else if (statusFilter != null && !statusFilter.trim().isEmpty() && !"All".equalsIgnoreCase(statusFilter)) {
+        complaints = dao.filterByStatus(statusFilter);
+    } else {
+        complaints = dao.getAllComplaints();
+    }
     
     int total = complaints.size();
     int pending = 0;
@@ -32,7 +42,7 @@
 <head>
     <meta charset="UTF-8">
     <title>Admin Dashboard | Citizen Voice</title>
-    <!-- CSS cache buster to guarantee the newest horizontal flex styles are loaded -->
+    <!-- Anti-cache versioning to ensure styles are updated immediately -->
     <link rel="stylesheet" href="css/style.css?v=<%= System.currentTimeMillis() %>">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
@@ -55,13 +65,19 @@
     </nav>
 
     <main class="dashboard-main">
-        <header class="dashboard-header animate-up">
-            <h2><i class="fa-solid fa-gauge-high"></i> Platform Overview</h2>
-            <p>Manage and track community complaints efficiently.</p>
-        </header>
+        <!-- Distinct Admin Hero Section -->
+        <section class="hero-section animate-up" style="border-color: rgba(239, 68, 68, 0.3);">
+            <img src="img/admin_hero.png" alt="Admin Command Center" class="hero-bg">
+            <div class="hero-overlay" style="background: linear-gradient(90deg, rgba(15, 23, 42, 0.95) 20%, rgba(220, 38, 38, 0.4) 100%);"></div>
+            <div class="hero-content">
+                <span class="hero-badge" style="background: rgba(239, 68, 68, 0.15); color: #fca5a5; border-color: rgba(239, 68, 68, 0.4);"><i class="fa-solid fa-shield-halved"></i> Administrator Access</span>
+                <h1 style="background: linear-gradient(135deg, #fff, #fca5a5); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;">Command Center</h1>
+                <p>Monitor platform health, manage community concerns, and provide high-impact resolutions in real-time.</p>
+            </div>
+        </section>
 
-        <!-- Force horizontal layout directly inline to override any potential cache issues -->
-        <section class="stats-grid animate-up delay-1" style="display: flex; flex-direction: row; flex-wrap: nowrap; overflow-x: auto; gap: 1.5rem; margin-bottom: 2.5rem; justify-content: space-between;">
+        <!-- Stats Grid directly after hero -->
+        <section class="stats-grid animate-up delay-1">
             <div class="stat-card glass-container" style="flex: 1; min-width: 200px;">
                 <div class="stat-icon" style="background: rgba(99, 102, 241, 0.2); color: #6366f1;">
                     <i class="fa-solid fa-folder-open"></i>
@@ -101,6 +117,27 @@
         </section>
 
         <section class="table-section animate-up delay-2">
+            <!-- New Incredible Floating Search Panel -->
+            <div class="search-panel">
+                <form action="admin_dashboard.jsp" method="get">
+                    <div class="search-input-group">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                        <input type="text" name="search" placeholder="Search by citizen name or subject..." value="<%= searchQuery != null ? searchQuery : "" %>">
+                    </div>
+                    <div class="filter-group">
+                        <i class="fa-solid fa-filter" style="color: var(--primary);"></i>
+                        <select name="filter" onchange="this.form.submit()" class="status-select">
+                            <option value="All">All Categories</option>
+                            <option value="Pending" <%="Pending".equalsIgnoreCase(statusFilter) ? "selected" : ""%>>Pending</option>
+                            <option value="In Progress" <%="In Progress".equalsIgnoreCase(statusFilter) ? "selected" : ""%>>In Progress</option>
+                            <option value="Resolved" <%="Resolved".equalsIgnoreCase(statusFilter) ? "selected" : ""%>>Resolved</option>
+                            <option value="Rejected" <%="Rejected".equalsIgnoreCase(statusFilter) ? "selected" : ""%>>Rejected</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-primary" style="padding: 0.8rem 2rem; border-radius: 100px;">Search</button>
+                </form>
+            </div>
+
             <div class="glass-container table-wrapper">
                 <div class="table-header">
                     <h3><i class="fa-solid fa-list-check"></i> Recent Complaints</h3>
@@ -142,16 +179,19 @@
                                         <form action="admin" method="post" class="action-form">
                                             <input type="hidden" name="action" value="updateStatus">
                                             <input type="hidden" name="id" value="<%= c.getId() %>">
-                                            <div class="action-group">
-                                                <select name="status" class="status-select">
+                                            <div class="action-group" style="flex-direction: column; gap: 0.5rem;">
+                                                <select name="status" class="status-select" style="width: 130px;">
                                                     <option value="Pending" <%="Pending".equals(c.getStatus()) ? "selected" : "" %>>Pending</option>
                                                     <option value="In Progress" <%="In Progress".equals(c.getStatus()) ? "selected" : "" %>>In Progress</option>
                                                     <option value="Resolved" <%="Resolved".equals(c.getStatus()) ? "selected" : "" %>>Resolved</option>
                                                     <option value="Rejected" <%="Rejected".equals(c.getStatus()) ? "selected" : "" %>>Rejected</option>
                                                 </select>
-                                                <button type="submit" class="btn btn-update" title="Update Status">
-                                                    <i class="fa-solid fa-arrows-rotate"></i>
-                                                </button>
+                                                <div style="display: flex; gap: 0.3rem;">
+                                                    <input type="text" name="notes" class="status-select" placeholder="Resolution notes..." value="<%= c.getResolutionNotes() != null ? c.getResolutionNotes() : "" %>" style="width: 130px; font-size: 0.8rem;">
+                                                    <button type="submit" class="btn btn-update" title="Update Status">
+                                                        <i class="fa-solid fa-arrows-rotate"></i>
+                                                    </button>
+                                                </div>
                                             </div>
                                         </form>
                                     </td>

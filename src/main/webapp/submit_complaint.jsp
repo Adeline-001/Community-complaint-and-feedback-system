@@ -21,22 +21,25 @@
                 </nav>
 
                 <main style="padding: 3rem 5%; display: flex; justify-content: center;">
-                    <div class="glass-container" style="width: 100%; max-width: 600px;">
-                        <h2 style="margin-bottom: 2rem;">File a Complaint</h2>
-                        <form action="complaint" method="post">
-                            <input type="hidden" name="action" value="submit">
-                            <div class="form-group">
-                                <label>Category</label>
-                                <select name="category" required>
-                                    <option value="1">Leaking Pipeline</option>
-                                    <option value="2">No Water Supply</option>
-                                    <option value="3">Street Light Broken</option>
-                                    <option value="4">Frequent Power Cut</option>
-                                    <option value="5">Garbage Not Collected</option>
-                                    <option value="6">Sewage Blockage</option>
-                                    <option value="7">Pothole Repair Request</option>
-                                </select>
-                            </div>
+                 <div class="glass-container" style="width: 100%; max-width: 600px;">
+                     <h2 style="margin-bottom: 2rem;">File a Complaint</h2>
+                     <% String error = request.getParameter("error"); if("failed".equals(error)) { %>
+                         <div style="background: rgba(239, 68, 68, 0.2); color: #fca5a5; padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem; border: 1px solid rgba(239, 68, 68, 0.4);">
+                             <i class="fa-solid fa-circle-exclamation"></i> Failed to submit complaint. Please ensure all categories and fields are valid.
+                         </div>
+                     <% } %>
+                     <form action="complaint" method="post">
+                         <input type="hidden" name="action" value="submit">
+                         <div class="form-group">
+                             <label>Category</label>
+                             <select name="category" required>
+                                 <option value="1">Electricity</option>
+                                 <option value="2">Water Supply</option>
+                                 <option value="3">Roads</option>
+                                 <option value="4">Sanitation</option>
+                                 <option value="5">Other</option>
+                             </select>
+                         </div>
                             <div class="form-group">
                                 <label>Subject</label>
                                 <input type="text" name="subject" placeholder="Brief summary of the issue" required>

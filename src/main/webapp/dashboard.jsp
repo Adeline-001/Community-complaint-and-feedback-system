@@ -29,7 +29,7 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>Dashboard | Citizen Voice</title>
+    <title>Citizen Dashboard | Citizen Voice</title>
     <!-- Anti-cache query parameter to ensure latest CSS -->
     <link rel="stylesheet" href="css/style.css?v=<%= System.currentTimeMillis() %>">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -54,13 +54,19 @@
     </nav>
 
     <main class="dashboard-main">
-        <header class="dashboard-header animate-up">
-            <h2><i class="fa-solid fa-house-user"></i> My Dashboard</h2>
-            <p>Track your submitted complaints and community feedback.</p>
-        </header>
+        <!-- New Incredible Hero Section -->
+        <section class="hero-section animate-up">
+            <img src="img/hero.png" alt="Community Hero" class="hero-bg">
+            <div class="hero-overlay" style="background: linear-gradient(90deg, rgba(16, 185, 129, 0.9) 0%, rgba(15, 23, 42, 0.6) 60%);"></div>
+            <div class="hero-content">
+                <span class="hero-badge" style="background: rgba(255,255,255,0.2); color: white; border-color: rgba(255,255,255,0.3);"><i class="fa-solid fa-user-check"></i> Citizen Engagement Portal</span>
+                <h1 style="background: none; -webkit-text-fill-color: initial; color: white; text-shadow: 0 2px 10px rgba(0,0,0,0.3);">My Dashboard</h1>
+                <p style="color: rgba(255,255,255,0.9);">Track your submitted complaints, view community feedback, and help us build a better environment.</p>
+            </div>
+        </section>
 
         <!-- Stats Grid matching Admin Style -->
-        <section class="stats-grid animate-up delay-1" style="display: flex; flex-direction: row; flex-wrap: nowrap; overflow-x: auto; gap: 1.5rem; margin-bottom: 2.5rem; justify-content: space-between;">
+        <section class="stats-grid animate-up delay-1">
             <div class="stat-card glass-container" style="flex: 1; min-width: 200px;">
                 <div class="stat-icon" style="background: rgba(99, 102, 241, 0.2); color: #6366f1;">
                     <i class="fa-solid fa-folder-open"></i>
@@ -100,11 +106,32 @@
         </section>
 
         <section class="table-section animate-up delay-2">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
-                <h3 style="font-size: 1.5rem;"><i class="fa-solid fa-list-check"></i> Recent Complaints</h3>
-                <a href="submit_complaint.jsp" class="btn btn-primary" style="padding: 0.6rem 1.2rem; font-size: 0.95rem;">
-                    <i class="fa-solid fa-plus"></i> File New Complaint
-                </a>
+            <% String msg = request.getParameter("msg"); 
+               if("success".equals(msg)) { %>
+                <div style="background: rgba(16, 185, 129, 0.2); color: #6ee7b7; padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem; border: 1px solid rgba(16, 185, 129, 0.4); display: flex; align-items: center; gap: 0.5rem;">
+                    <i class="fa-solid fa-circle-check"></i> Your complaint was saved successfully!
+                </div>
+            <% } else if("updated".equals(msg)) { %>
+                <div style="background: rgba(59, 130, 246, 0.2); color: #93c5fd; padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem; border: 1px solid rgba(59, 130, 246, 0.4); display: flex; align-items: center; gap: 0.5rem;">
+                    <i class="fa-solid fa-pen-to-square"></i> Your complaint was updated successfully.
+                </div>
+            <% } else if("deleted".equals(msg)) { %>
+                <div style="background: rgba(239, 68, 68, 0.2); color: #fca5a5; padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem; border: 1px solid rgba(239, 68, 68, 0.4); display: flex; align-items: center; gap: 0.5rem;">
+                    <i class="fa-solid fa-trash"></i> Complaint deleted successfully.
+                </div>
+            <% } %>
+
+            <!-- Floating control panel for actions -->
+            <div class="search-panel">
+                <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                    <div style="display: flex; align-items: center; gap: 0.8rem;">
+                        <i class="fa-solid fa-list-check" style="font-size: 1.2rem; color: var(--primary);"></i>
+                        <h3 style="margin: 0; font-size: 1.2rem;">My Recent Activity</h3>
+                    </div>
+                    <a href="submit_complaint.jsp" class="btn btn-primary" style="padding: 0.6rem 1.5rem; font-size: 0.95rem; border-radius: 100px;">
+                        <i class="fa-solid fa-plus"></i> File New Complaint
+                    </a>
+                </div>
             </div>
 
             <div class="glass-container table-wrapper">
@@ -134,16 +161,25 @@
                                             <% if("Rejected".equalsIgnoreCase(c.getStatus())) out.print("<i class='fa-solid fa-xmark'></i> "); %>
                                             <%= c.getStatus() %>
                                         </span>
+                                        <% if(c.getResolutionNotes() != null && !c.getResolutionNotes().isEmpty()) { %>
+                                            <div class="resolution-note" style="margin-top: 0.5rem; font-size: 0.8rem; color: var(--text-gray); border-top: 1px solid rgba(255,255,255,0.1); padding-top: 0.3rem;">
+                                                <strong>Admin:</strong> <%= c.getResolutionNotes() %>
+                                            </div>
+                                        <% } %>
                                     </td>
                                     <td style="color: var(--text-gray); font-size: 0.9rem;"><%= c.getCreatedAt() %></td>
                                     <td>
                                         <div class="action-group" style="gap: 1rem;">
-                                            <a href="edit_complaint.jsp?id=<%= c.getId() %>" class="btn-update" style="text-decoration: none; padding: 0.4rem 0.8rem; display: inline-flex; align-items: center; gap: 0.3rem;">
-                                                <i class="fa-regular fa-pen-to-square"></i> Edit
-                                            </a>
-                                            <a href="complaint?action=delete&id=<%= c.getId() %>" style="color: var(--danger); font-size: 1.1rem; transition: transform 0.2s; display: inline-flex;" title="Delete" onclick="return confirm('Are you sure you want to delete this complaint?')">
-                                                <i class="fa-regular fa-trash-can"></i>
-                                            </a>
+                                            <% if ("Pending".equalsIgnoreCase(c.getStatus())) { %>
+                                                <a href="edit_complaint.jsp?id=<%= c.getId() %>" class="btn-update" style="text-decoration: none; padding: 0.4rem 0.8rem; display: inline-flex; align-items: center; gap: 0.3rem;">
+                                                    <i class="fa-regular fa-pen-to-square"></i> Edit
+                                                </a>
+                                                <a href="complaint?action=delete&id=<%= c.getId() %>" style="color: var(--danger); font-size: 1.1rem; transition: transform 0.2s; display: inline-flex;" title="Delete" onclick="return confirm('Are you sure you want to delete this complaint?')">
+                                                    <i class="fa-regular fa-trash-can"></i>
+                                                </a>
+                                            <% } else { %>
+                                                <span style="color: var(--text-gray); font-style: italic; font-size: 0.85rem;">Read only</span>
+                                            <% } %>
                                         </div>
                                     </td>
                                 </tr>
