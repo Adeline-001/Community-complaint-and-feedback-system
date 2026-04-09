@@ -9,6 +9,7 @@
                 <meta charset="UTF-8">
                 <title>Submit Complaint | Citizen Voice</title>
                 <link rel="stylesheet" href="css/style.css?v=1.1">
+                <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
             </head>
 
             <body>
@@ -28,7 +29,7 @@
                              <i class="fa-solid fa-circle-exclamation"></i> Failed to submit complaint. Please ensure all categories and fields are valid.
                          </div>
                      <% } %>
-                     <form action="complaint" method="post">
+                     <form action="complaint" method="post" id="complaintForm" onsubmit="return showLoadingState();">
                          <input type="hidden" name="action" value="submit">
                          <div class="form-group">
                              <label>Category</label>
@@ -48,10 +49,19 @@
                                 <label>Detailed Description</label>
                                 <textarea name="description" rows="5" required></textarea>
                             </div>
-                            <button type="submit" class="btn btn-primary" style="width: 100%;">Submit Complaint</button>
+                            <button type="submit" id="submitBtn" class="btn btn-primary" style="width: 100%;">Submit Complaint</button>
                         </form>
                     </div>
                 </main>
+                <script>
+                    function showLoadingState() {
+                        const btn = document.getElementById('submitBtn');
+                        btn.disabled = true;
+                        btn.style.opacity = '0.7';
+                        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Processing...';
+                        return true; 
+                    }
+                </script>
             </body>
 
             </html>

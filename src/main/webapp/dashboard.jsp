@@ -33,6 +33,7 @@
     <!-- Anti-cache query parameter to ensure latest CSS -->
     <link rel="stylesheet" href="css/style.css?v=<%= System.currentTimeMillis() %>">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 
 <body>
@@ -174,7 +175,7 @@
                                                 <a href="edit_complaint.jsp?id=<%= c.getId() %>" class="btn-update" style="text-decoration: none; padding: 0.4rem 0.8rem; display: inline-flex; align-items: center; gap: 0.3rem;">
                                                     <i class="fa-regular fa-pen-to-square"></i> Edit
                                                 </a>
-                                                <a href="complaint?action=delete&id=<%= c.getId() %>" style="color: var(--danger); font-size: 1.1rem; transition: transform 0.2s; display: inline-flex;" title="Delete" onclick="return confirm('Are you sure you want to delete this complaint?')">
+                                                <a href="javascript:void(0);" style="color: var(--danger); font-size: 1.1rem; transition: transform 0.2s; display: inline-flex;" title="Delete" onclick="confirmDelete('<%= c.getId() %>')">
                                                     <i class="fa-regular fa-trash-can"></i>
                                                 </a>
                                             <% } else { %>
@@ -197,6 +198,26 @@
             </div>
         </section>
     </main>
+    <script>
+        function confirmDelete(complaintId) {
+            Swal.fire({
+                title: 'Delete Complaint?',
+                text: "This action cannot be undone!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#ef4444',
+                cancelButtonColor: '#475569',
+                confirmButtonText: '<i class="fa-solid fa-trash"></i> Yes, delete it',
+                background: 'rgba(30, 41, 59, 0.95)',
+                color: '#f8fafc',
+                backdrop: `rgba(0,0,0,0.6)`
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    window.location.href = `complaint?action=delete&id=${complaintId}`;
+                }
+            })
+        }
+    </script>
 </body>
 
 </html>
