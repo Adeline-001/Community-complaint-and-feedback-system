@@ -149,6 +149,7 @@
                                 <th>ID</th>
                                 <th>Citizen</th>
                                 <th>Subject</th>
+                                <th>Description</th>
                                 <th>Category</th>
                                 <th>Status</th>
                                 <th>Action</th>
@@ -165,6 +166,7 @@
                                         </div>
                                     </td>
                                     <td><%= c.getSubject() %></td>
+                                    <td><%= c.getDescription() %></td>
                                     <td><span class="category-pill"><%= c.getCategoryName() %></span></td>
                                     <td>
                                         <span class="status-badge status-<%= c.getStatus().toLowerCase().replace(" ", "") %>">
