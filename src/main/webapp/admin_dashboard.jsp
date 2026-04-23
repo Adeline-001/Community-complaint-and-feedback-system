@@ -1,8 +1,9 @@
 <%@ page import="com.example.model.Admin" %>
 <%@ page import="com.example.dao.ComplaintDAO" %>
+<%@ page import="com.example.dao.UserDAO" %>
 <%@ page import="com.example.model.Complaint" %>
+<%@ page import="com.example.model.User" %>
 <%@ page import="java.util.List" %>
-<%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <% 
     Admin admin = (Admin) session.getAttribute("admin"); 
     if (admin == null) {
@@ -10,6 +11,9 @@
         return; 
     } 
     ComplaintDAO dao = new ComplaintDAO();
+    UserDAO userDAO = new UserDAO();
+    List<User> allUsers = userDAO.getAllUsers();
+    
     String searchQuery = request.getParameter("search");
     String statusFilter = request.getParameter("filter");
     List<Complaint> complaints;
@@ -21,6 +25,7 @@
     } else {
         complaints = dao.getAllComplaints();
     }
+    List<Complaint> recentlyUpdated = dao.getRecentlyModifiedComplaints();
     
     int total = complaints.size();
     int pending = 0;
@@ -73,6 +78,14 @@
                 <span class="hero-badge" style="background: rgba(239, 68, 68, 0.15); color: #fca5a5; border-color: rgba(239, 68, 68, 0.4);"><i class="fa-solid fa-shield-halved"></i> Administrator Access</span>
                 <h1 style="background: linear-gradient(135deg, #fff, #fca5a5); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;">Command Center</h1>
                 <p>Monitor platform health, manage community concerns, and provide high-impact resolutions in real-time.</p>
+                <div style="margin-top: 1.5rem; display: flex; gap: 1rem;">
+                    <button onclick="document.getElementById('usersModal').style.display='block'" class="btn btn-primary" style="background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.3); color: white;">
+                        <i class="fa-solid fa-users"></i> View Registered Citizens
+                    </button>
+                    <button onclick="document.getElementById('activityModal').style.display='block'" class="btn btn-primary" style="background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3); color: #6ee7b7;">
+                        <i class="fa-solid fa-clock-rotate-left"></i> System Activity
+                    </button>
+                </div>
             </div>
         </section>
 
@@ -212,6 +225,161 @@
             </div>
         </section>
     </main>
+
+    <!-- Users Modal -->
+    <div id="usersModal" class="modal">
+        <div class="modal-content glass-container">
+            <span class="close-btn" onclick="document.getElementById('usersModal').style.display='none'">&times;</span>
+            <h2 style="margin-bottom: 1.5rem; color: var(--primary);"><i class="fa-solid fa-users"></i> Registered Citizens</h2>
+            <div class="table-container" style="max-height: 400px; overflow-y: auto;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Phone</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% for(User u : allUsers) { %>
+                            <tr class="table-row">
+                                <td><strong>#<%= u.getId() %></strong></td>
+                                <td>
+                                    <div class="user-cell">
+                                        <div class="avatar"><i class="fa-solid fa-user"></i></div>
+                                        <span><%= u.getName() %></span>
+                                    </div>
+                                </td>
+                                <td><%= u.getEmail() %></td>
+                                <td><%= u.getPhone() != null && !u.getPhone().isEmpty() ? u.getPhone() : "N/A" %></td>
+                                <td>
+                                    <div style="display: flex; gap: 0.8rem;">
+                                        <button onclick="editUser(<%= u.getId() %>, '<%= u.getName().replace("'", "\\'") %>', '<%= u.getEmail().replace("'", "\\'") %>', '<%= u.getPhone() != null ? u.getPhone().replace("'", "\\'") : "" %>', '<%= u.getAddress() != null ? u.getAddress().replace("'", "\\'") : "" %>')" 
+                                                class="btn-icon" style="background: rgba(99, 102, 241, 0.1); color: var(--primary); font-size: 0.9rem;" title="Edit User">
+                                            <i class="fa-solid fa-user-pen"></i>
+                                        </button>
+                                        <a href="admin?action=deleteUser&id=<%= u.getId() %>" 
+                                           onclick="return confirm('Are you sure you want to delete this user? This may fail if they have active complaints.')"
+                                           class="btn-icon" style="background: rgba(239, 68, 68, 0.1); color: var(--danger); font-size: 0.9rem;" title="Delete User">
+                                            <i class="fa-solid fa-user-xmark"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                        <% } if(allUsers.isEmpty()) { %>
+                            <tr>
+                                <td colspan="5" class="empty-state">No users registered yet.</td>
+                            </tr>
+                        <% } %>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit User Modal -->
+    <div id="editUserModal" class="modal">
+        <div class="modal-content glass-container" style="max-width: 500px;">
+            <span class="close-btn" onclick="document.getElementById('editUserModal').style.display='none'">&times;</span>
+            <h2 style="margin-bottom: 1.5rem; color: var(--primary);"><i class="fa-solid fa-user-pen"></i> Edit Citizen Data</h2>
+            <form action="admin" method="post">
+                <input type="hidden" name="action" value="updateUser">
+                <input type="hidden" name="id" id="editUserId">
+                <div class="form-group">
+                    <label>Full Name</label>
+                    <input type="text" name="name" id="editUserName" required>
+                </div>
+                <div class="form-group">
+                    <label>Email Address</label>
+                    <input type="email" name="email" id="editUserEmail" required>
+                </div>
+                <div class="form-group">
+                    <label>Phone Number</label>
+                    <input type="text" name="phone" id="editUserPhone">
+                </div>
+                <div class="form-group">
+                    <label>Address</label>
+                    <textarea name="address" id="editUserAddress" rows="3"></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 1rem;">Save Changes</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- System Activity Modal -->
+    <div id="activityModal" class="modal">
+        <div class="modal-content glass-container" style="max-width: 900px;">
+            <span class="close-btn" onclick="document.getElementById('activityModal').style.display='none'">&times;</span>
+            <h2 style="margin-bottom: 1.5rem; color: var(--accent);"><i class="fa-solid fa-clock-rotate-left"></i> Recent Community Activity</h2>
+            <p style="color: var(--text-gray); margin-bottom: 1.5rem;">Showing the latest complaints that have been edited or updated by citizens.</p>
+            <div class="table-container" style="max-height: 400px; overflow-y: auto;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Time</th>
+                            <th>Citizen</th>
+                            <th>Modification</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% for(Complaint c : recentlyUpdated) { %>
+                            <tr class="table-row">
+                                <td style="font-size: 0.85rem; color: var(--text-gray);"><%= c.getUpdatedAt() %></td>
+                                <td>
+                                    <div class="user-cell">
+                                        <div class="avatar" style="background: var(--accent);"><i class="fa-solid fa-user"></i></div>
+                                        <span><%= c.getUserName() %></span>
+                                    </div>
+                                </td>
+                                <td>
+                                    <strong>Updated:</strong> <%= c.getSubject() %><br>
+                                    <small style="opacity: 0.7;"><%= c.getDescription().length() > 50 ? c.getDescription().substring(0, 50) + "..." : c.getDescription() %></small>
+                                </td>
+                                <td>
+                                    <span class="status-badge status-<%= c.getStatus().toLowerCase().replace(" ", "") %>" style="font-size: 0.75rem;">
+                                        <%= c.getStatus() %>
+                                    </span>
+                                </td>
+                            </tr>
+                        <% } if(recentlyUpdated.isEmpty()) { %>
+                            <tr>
+                                <td colspan="4" class="empty-state">No recent modifications found.</td>
+                            </tr>
+                        <% } %>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <p>&copy; 2024 Citizen Voice. Administrative Control Panel.</p>
+        <div class="footer-links">
+            <span><i class="fa-solid fa-shield-halved"></i> System Admin Mode</span>
+            <span><i class="fa-solid fa-server"></i> v1.8 Stable Release</span>
+        </div>
+    </footer>
+
+    <script>
+        function editUser(id, name, email, phone, address) {
+            document.getElementById('editUserId').value = id;
+            document.getElementById('editUserName').value = name;
+            document.getElementById('editUserEmail').value = email;
+            document.getElementById('editUserPhone').value = phone;
+            document.getElementById('editUserAddress').value = address;
+            document.getElementById('editUserModal').style.display = 'block';
+        }
+
+        // Close modals when clicking outside
+        window.onclick = function(event) {
+            if (event.target.className === 'modal') {
+                event.target.style.display = 'none';
+            }
+        }
+    </script>
 </body>
 
 </html>

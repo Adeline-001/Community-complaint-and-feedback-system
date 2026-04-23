@@ -77,4 +77,63 @@ public class UserDAO {
         }
         return users;
     }
+
+    public boolean updateUser(User user) {
+        String query = "UPDATE users SET name = ?, email = ?, phone = ?, address = ? WHERE id = ?";
+        try (Connection conn = DBConnection.getConnection();
+                PreparedStatement stmt = conn.prepareStatement(query)) {
+            stmt.setString(1, user.getName());
+            stmt.setString(2, user.getEmail());
+            stmt.setString(3, user.getPhone());
+            stmt.setString(4, user.getAddress());
+            stmt.setInt(5, user.getId());
+            return stmt.executeUpdate() > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    public boolean deleteUser(int id) {
+        Connection conn = null;
+        try {
+            conn = DBConnection.getConnection();
+            conn.setAutoCommit(false); // Start transaction
+
+            // 1. Delete all complaints associated with this user first
+            String deleteComplaintsQuery = "DELETE FROM complaints WHERE user_id = ?";
+            try (PreparedStatement stmtC = conn.prepareStatement(deleteComplaintsQuery)) {
+                stmtC.setInt(1, id);
+                stmtC.executeUpdate();
+            }
+
+            // 2. Now delete the user
+            String deleteUserQuery = "DELETE FROM users WHERE id = ?";
+            try (PreparedStatement stmtU = conn.prepareStatement(deleteUserQuery)) {
+                stmtU.setInt(1, id);
+                int rows = stmtU.executeUpdate();
+                conn.commit(); // Commit transaction
+                return rows > 0;
+            }
+        } catch (SQLException e) {
+            if (conn != null) {
+                try {
+                    conn.rollback();
+                } catch (SQLException ex) {
+                    ex.printStackTrace();
+                }
+            }
+            e.printStackTrace();
+            return false;
+        } finally {
+            if (conn != null) {
+                try {
+                    conn.setAutoCommit(true);
+                    conn.close();
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
 }

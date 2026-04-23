@@ -198,6 +198,15 @@
             </div>
         </section>
     </main>
+
+    <footer class="footer">
+        <p>&copy; 2024 Citizen Voice. Empowering communities through transparency.</p>
+        <div class="footer-links">
+            <span><i class="fa-solid fa-code"></i> Built with Java Servlets & JSP</span>
+            <span><i class="fa-solid fa-database"></i> Secured with MySQL</span>
+            <span><i class="fa-solid fa-lock"></i> BCrypt Encrypted</span>
+        </div>
+    </footer>
     <script>
         function confirmDelete(complaintId) {
             Swal.fire({

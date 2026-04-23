@@ -184,4 +184,23 @@ public class ComplaintDAO {
         }
         return c;
     }
+
+    public List<Complaint> getRecentlyModifiedComplaints() {
+        List<Complaint> complaints = new ArrayList<>();
+        String query = "SELECT c.*, cat.name as category_name, u.name as user_name FROM complaints c " +
+                "JOIN categories cat ON c.category_id = cat.id " +
+                "JOIN users u ON c.user_id = u.id " +
+                "WHERE c.updated_at > c.created_at " +
+                "ORDER BY c.updated_at DESC LIMIT 10";
+        try (Connection conn = DBConnection.getConnection();
+                Statement stmt = conn.createStatement()) {
+            ResultSet rs = stmt.executeQuery(query);
+            while (rs.next()) {
+                complaints.add(mapResultSetToComplaint(rs));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return complaints;
+    }
 }
