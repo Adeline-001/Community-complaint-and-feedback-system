@@ -70,3 +70,15 @@ INSERT INTO categories (name) VALUES ('Electricity'), ('Water Supply'), ('Roads'
 
 -- 7. Create a default admin (Password is 'admin123' - you should change this later)
 INSERT INTO admins (name, email, password) VALUES ('System Admin', 'admin@example.com', 'admin123');
+
+-- 8. Create Contact Messages table for notifications
+CREATE TABLE contact_messages (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    email VARCHAR(100) NOT NULL,
+    message TEXT NOT NULL,
+    reply_message TEXT,
+    is_read BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    replied_at TIMESTAMP NULL
+);

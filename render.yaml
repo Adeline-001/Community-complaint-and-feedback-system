@@ -1,0 +1,16 @@
+services:
+  - type: web
+    name: community-complaint-system
+    env: docker
+    plan: free
+    dockerContext: .
+    dockerfilePath: Dockerfile
+    envVars:
+      - key: DB_URL
+        value: jdbc:mysql://mysql-127361a7-niwemugeniadeline98-4119.c.aivencloud.com:18535/defaultdb?useSSL=true
+      - key: DB_USER
+        value: avnadmin
+      - key: DB_PASS
+        sync: false # Set this manually in the Render dashboard for security
+      - key: JWT_SECRET
+        generateValue: true
