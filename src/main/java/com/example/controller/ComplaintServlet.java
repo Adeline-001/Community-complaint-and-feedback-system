@@ -56,7 +56,23 @@ public class ComplaintServlet extends HttpServlet {
             return;
         }
 
-        // Web Interface Logic
+        // Web Interface Logic (Public)
+        if ("contact_message".equals(action)) {
+            System.out.println("[DEBUG] ComplaintServlet: Received contact message from " + request.getParameter("email"));
+            com.example.model.Message msg = new com.example.model.Message();
+            msg.setName(request.getParameter("name"));
+            msg.setEmail(request.getParameter("email"));
+            msg.setMessage(request.getParameter("message"));
+
+            com.example.dao.MessageDAO msgDAO = new com.example.dao.MessageDAO();
+            if (msgDAO.saveMessage(msg)) {
+                response.sendRedirect("landing.jsp?msg=sent#contact");
+            } else {
+                response.sendRedirect("landing.jsp?error=failed#contact");
+            }
+            return;
+        }
+
         if (user == null) {
             response.sendRedirect("login.jsp");
             return;
@@ -89,6 +105,23 @@ public class ComplaintServlet extends HttpServlet {
                 response.sendRedirect("dashboard.jsp?msg=updated");
             } else {
                 response.sendRedirect("edit_complaint.jsp?id=" + id + "&error=failed");
+            }
+        } else if ("delete_inquiry".equals(action)) {
+            int id = Integer.parseInt(request.getParameter("id"));
+            com.example.dao.MessageDAO msgDAO = new com.example.dao.MessageDAO();
+            if (msgDAO.deleteMessage(id)) {
+                response.sendRedirect("dashboard.jsp?msg=inquiry_deleted");
+            } else {
+                response.sendRedirect("dashboard.jsp?error=inquiry_delete_failed");
+            }
+        } else if ("edit_inquiry".equals(action)) {
+            int id = Integer.parseInt(request.getParameter("id"));
+            String newMessage = request.getParameter("message");
+            com.example.dao.MessageDAO msgDAO = new com.example.dao.MessageDAO();
+            if (msgDAO.updateMessage(id, newMessage)) {
+                response.sendRedirect("dashboard.jsp?msg=inquiry_updated");
+            } else {
+                response.sendRedirect("dashboard.jsp?error=inquiry_update_failed");
             }
         }
     }

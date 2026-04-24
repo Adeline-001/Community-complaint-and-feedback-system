@@ -167,10 +167,10 @@ th {
     font-size: 0.8rem;
 }
 
-.status-pending { background: rgba(234, 179, 8, 0.2); color: #eab308; }
-.status-progress { background: rgba(59, 130, 246, 0.2); color: #3b82f6; }
-.status-resolved { background: rgba(16, 185, 129, 0.2); color: #10b981; }
-.status-rejected { background: rgba(239, 68, 68, 0.2); color: #ef4444; }
+.status-pending { background: rgba(234, 179, 8, 0.2); color: #eab308; border: 1px solid rgba(234, 179, 8, 0.3); }
+.status-inprogress, .status-progress { background: rgba(59, 130, 246, 0.2); color: #3b82f6; border: 1px solid rgba(59, 130, 246, 0.3); }
+.status-resolved { background: rgba(16, 185, 129, 0.2); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3); }
+.status-rejected { background: rgba(239, 68, 68, 0.2); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3); }
 
 /* Admin Dashboard Redesign Enhancements */
 .dashboard-main {
@@ -530,12 +530,63 @@ th {
 }
 
 .resolution-note {
-    background: rgba(255, 255, 255, 0.05);
-    padding: 0.8rem;
+    background: rgba(99, 102, 241, 0.1);
+    padding: 1rem;
     border-radius: 12px;
-    margin-top: 0.8rem;
-    font-size: 0.85rem;
+    margin-top: 1rem;
+    font-size: 0.9rem;
     border-left: 4px solid var(--primary);
+    color: #e2e8f0 !important;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+}
+
+.inquiry-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+    gap: 1.5rem;
+    margin-top: 1.5rem;
+}
+
+.inquiry-card {
+    border-left: 4px solid var(--primary);
+    padding: 1.5rem;
+    transition: transform 0.3s ease;
+}
+
+.inquiry-card:hover {
+    transform: translateY(-5px);
+}
+
+.inquiry-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+    font-size: 0.85rem;
+    color: var(--text-gray);
+}
+
+.inquiry-message {
+    font-style: italic;
+    color: #d1d5db;
+    margin-bottom: 1.5rem;
+}
+
+.admin-reply-box {
+    background: rgba(16, 185, 129, 0.1);
+    padding: 1.2rem;
+    border-radius: 12px;
+    border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.reply-header {
+    color: #6ee7b7;
+    font-weight: 700;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
 }
 
 .btn-icon {

@@ -1,7 +1,11 @@
 <%@ page import="com.example.model.User" %>
 <%@ page import="com.example.dao.ComplaintDAO" %>
+<%@ page import="com.example.dao.MessageDAO" %>
 <%@ page import="com.example.model.Complaint" %>
+<%@ page import="com.example.model.Message" %>
 <%@ page import="java.util.List" %>
+<%@ page import="java.sql.*" %>
+<%@ page import="com.example.util.DBConnection" %>
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <% 
     User user = (User) session.getAttribute("user"); 
@@ -11,6 +15,10 @@
     } 
     ComplaintDAO dao = new ComplaintDAO();
     List<Complaint> complaints = dao.getComplaintsByUser(user.getId());
+    
+    MessageDAO mDAO = new MessageDAO();
+    List<Message> userMessages = mDAO.getMessagesByEmail(user.getEmail());
+    System.out.println("[DEBUG] dashboard.jsp: Fetching inquiries for email: " + user.getEmail() + ". Found: " + userMessages.size());
     
     int total = complaints.size();
     int pending = 0;
@@ -49,6 +57,7 @@
         <div class="nav-links">
             <span style="color: white; margin-right: 1.5rem;"><i class="fa-solid fa-user"></i> <%= user.getName() %></span>
             <a href="dashboard.jsp" class="active"><i class="fa-solid fa-chart-pie"></i> Dashboard</a>
+            <a href="javascript:void(0);" onclick="document.getElementById('inquiriesModal').style.display='block'"><i class="fa-solid fa-envelope"></i> My Inquiries</a>
             <a href="submit_complaint.jsp"><i class="fa-solid fa-pen-to-square"></i> New Complaint</a>
             <a href="auth" class="btn btn-primary"><i class="fa-solid fa-right-from-bracket"></i> Logout</a>
         </div>
@@ -63,6 +72,19 @@
                 <span class="hero-badge" style="background: rgba(255,255,255,0.2); color: white; border-color: rgba(255,255,255,0.3);"><i class="fa-solid fa-user-check"></i> Citizen Engagement Portal</span>
                 <h1 style="background: none; -webkit-text-fill-color: initial; color: white; text-shadow: 0 2px 10px rgba(0,0,0,0.3);">My Dashboard</h1>
                 <p style="color: rgba(255,255,255,0.9);">Track your submitted complaints, view community feedback, and help us build a better environment.</p>
+                <div style="margin-top: 1.5rem; display: flex; gap: 1rem;">
+                    <a href="submit_complaint.jsp" class="btn btn-primary" style="box-shadow: 0 10px 20px rgba(16, 185, 129, 0.3);">
+                        <i class="fa-solid fa-plus-circle"></i> New Complaint
+                    </a>
+                    <button onclick="document.getElementById('inquiriesModal').style.display='block'" class="btn btn-primary" style="background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.3); color: white; position: relative;">
+                        <i class="fa-solid fa-envelope-open-text"></i> My Inquiries
+                        <% if(!userMessages.isEmpty()) { %>
+                            <span style="position: absolute; top: -8px; right: -8px; background: var(--accent); color: white; width: 20px; height: 20px; border-radius: 50%; font-size: 0.7rem; display: flex; align-items: center; justify-content: center; border: 2px solid #1e293b;">
+                                <%= userMessages.size() %>
+                            </span>
+                        <% } %>
+                    </button>
+                </div>
             </div>
         </section>
 
@@ -120,6 +142,26 @@
                 <div style="background: rgba(239, 68, 68, 0.2); color: #fca5a5; padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem; border: 1px solid rgba(239, 68, 68, 0.4); display: flex; align-items: center; gap: 0.5rem;">
                     <i class="fa-solid fa-trash"></i> Complaint deleted successfully.
                 </div>
+            <% } else if("inquiry_deleted".equals(msg)) { %>
+                <script>
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Inquiry Deleted',
+                        text: 'Your support inquiry has been removed.',
+                        background: '#1e293b',
+                        color: '#fff'
+                    });
+                </script>
+            <% } else if("inquiry_updated".equals(msg)) { %>
+                <script>
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Inquiry Updated',
+                        text: 'Your message has been modified successfully.',
+                        background: '#1e293b',
+                        color: '#fff'
+                    });
+                </script>
             <% } %>
 
             <!-- Floating control panel for actions -->
@@ -162,11 +204,12 @@
                                             <% if("Rejected".equalsIgnoreCase(c.getStatus())) out.print("<i class='fa-solid fa-xmark'></i> "); %>
                                             <%= c.getStatus() %>
                                         </span>
-                                        <% if(c.getResolutionNotes() != null && !c.getResolutionNotes().isEmpty()) { %>
-                                            <div class="resolution-note" style="margin-top: 0.5rem; font-size: 0.8rem; color: var(--text-gray); border-top: 1px solid rgba(255,255,255,0.1); padding-top: 0.3rem;">
-                                                <strong>Admin:</strong> <%= c.getResolutionNotes() %>
-                                            </div>
-                                        <% } %>
+                                         <% if(c.getResolutionNotes() != null && !c.getResolutionNotes().isEmpty()) { %>
+                                             <div class="resolution-note">
+                                                 <strong><i class="fa-solid fa-comment-dots"></i> Admin Reply:</strong><br>
+                                                 <%= c.getResolutionNotes() %>
+                                             </div>
+                                         <% } %>
                                     </td>
                                     <td style="color: var(--text-gray); font-size: 0.9rem;"><%= c.getCreatedAt() %></td>
                                     <td>
@@ -199,8 +242,57 @@
         </section>
     </main>
 
+    <!-- My Inquiries Modal -->
+    <div id="inquiriesModal" class="modal">
+        <div class="modal-content glass-container" style="max-width: 800px;">
+            <span class="close-btn" onclick="document.getElementById('inquiriesModal').style.display='none'">&times;</span>
+            <h2 style="margin-bottom: 1.5rem; color: var(--accent);"><i class="fa-solid fa-envelope-open-text"></i> My Inquiries & Support</h2>
+            <p style="color: var(--text-gray); margin-bottom: 1.5rem;">View your questions and replies from the administration.</p>
+            
+            <div style="max-height: 500px; overflow-y: auto; padding-right: 10px;">
+                <% for(Message m : userMessages) { %>
+                    <div class="glass-container inquiry-card" style="margin-bottom: 1.5rem; background: rgba(255,255,255,0.03); position: relative;">
+                        <div class="inquiry-header">
+                            <span><i class="fa-solid fa-paper-plane"></i> Sent Inquiry</span>
+                            <div style="display: flex; gap: 0.8rem; align-items: center;">
+                                <span><%= m.getCreatedAt() %></span>
+                                <button onclick="editInquiry('<%= m.getId() %>', '<%= m.getMessage().replace("'", "\\'").replace("\n", " ").replace("\r", " ") %>')" class="btn-icon" style="width: 28px; height: 28px; font-size: 0.75rem; background: rgba(99, 102, 241, 0.1); color: var(--primary);" title="Edit Inquiry">
+                                    <i class="fa-solid fa-pen"></i>
+                                </button>
+                                <button onclick="deleteInquiry('<%= m.getId() %>')" class="btn-icon" style="width: 28px; height: 28px; font-size: 0.75rem; background: rgba(239, 68, 68, 0.1); color: var(--danger);" title="Delete Inquiry">
+                                    <i class="fa-solid fa-trash-can"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <p class="inquiry-message">"<%= m.getMessage() %>"</p>
+                        
+                        <% if(m.getReplyMessage() != null && !m.getReplyMessage().isEmpty()) { %>
+                            <div class="admin-reply-box">
+                                <div class="reply-header">
+                                    <i class="fa-solid fa-reply-all"></i> Administrative Response
+                                </div>
+                                <p style="color: #fff; line-height: 1.5;"><%= m.getReplyMessage() %></p>
+                                <small style="display: block; margin-top: 0.8rem; opacity: 0.6; font-size: 0.75rem;"><%= m.getRepliedAt() %></small>
+                            </div>
+                        <% } else { %>
+                            <div style="background: rgba(255, 255, 255, 0.05); padding: 1rem; border-radius: 10px; font-size: 0.85rem; color: var(--text-gray); border: 1px dashed rgba(255,255,255,0.1);">
+                                <i class="fa-solid fa-hourglass-half fa-spin"></i> Awaiting administrative review...
+                            </div>
+                        <% } %>
+                    </div>
+                <% } if(userMessages.isEmpty()) { %>
+                    <div style="text-align: center; padding: 3rem; color: var(--text-gray);">
+                        <i class="fa-regular fa-message fa-3x" style="opacity: 0.3; margin-bottom: 1rem; display: block;"></i>
+                        <p>No support inquiries found matching your email: <strong><%= user.getEmail() %></strong></p>
+                        <p style="font-size: 0.8rem; margin-top: 1rem; opacity: 0.6;">Note: Inquiries are matched by the email address you used in the contact form.</p>
+                    </div>
+                <% } %>
+            </div>
+        </div>
+    </div>
+
     <footer class="footer">
-        <p>&copy; 2024 Citizen Voice. Empowering communities through transparency.</p>
+        <p>&copy; 2026 Citizen Voice. Empowering communities through transparency.</p>
         <div class="footer-links">
             <span><i class="fa-solid fa-code"></i> Built with Java Servlets & JSP</span>
             <span><i class="fa-solid fa-database"></i> Secured with MySQL</span>
@@ -225,6 +317,73 @@
                     window.location.href = `complaint?action=delete&id=${complaintId}`;
                 }
             })
+        }
+
+        function deleteInquiry(id) {
+            Swal.fire({
+                title: 'Delete Inquiry?',
+                text: "Your message and any replies will be permanently removed.",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#ef4444',
+                confirmButtonText: 'Yes, delete it',
+                background: '#1e293b',
+                color: '#fff'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    window.location.href = `complaint?action=delete_inquiry&id=${id}`;
+                }
+            });
+        }
+
+        function editInquiry(id, currentMessage) {
+            Swal.fire({
+                title: 'Edit Inquiry',
+                input: 'textarea',
+                inputValue: currentMessage,
+                inputLabel: 'Update your message to the administration',
+                showCancelButton: true,
+                confirmButtonColor: '#6366f1',
+                background: '#1e293b',
+                color: '#fff',
+                inputValidator: (value) => {
+                    if (!value) return 'You need to write something!'
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    const form = document.createElement('form');
+                    form.method = 'POST';
+                    form.action = 'complaint';
+                    
+                    const actionInput = document.createElement('input');
+                    actionInput.type = 'hidden';
+                    actionInput.name = 'action';
+                    actionInput.value = 'edit_inquiry';
+                    
+                    const idInput = document.createElement('input');
+                    idInput.type = 'hidden';
+                    idInput.name = 'id';
+                    idInput.value = id;
+                    
+                    const msgInput = document.createElement('input');
+                    msgInput.type = 'hidden';
+                    msgInput.name = 'message';
+                    msgInput.value = result.value;
+                    
+                    form.appendChild(actionInput);
+                    form.appendChild(idInput);
+                    form.appendChild(msgInput);
+                    document.body.appendChild(form);
+                    form.submit();
+                }
+            });
+        }
+
+        // Close modals when clicking outside
+        window.onclick = function(event) {
+            if (event.target.className === 'modal') {
+                event.target.style.display = 'none';
+            }
         }
     </script>
 </body>

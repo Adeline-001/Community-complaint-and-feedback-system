@@ -7,6 +7,7 @@
     <link rel="stylesheet" href="css/style.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 <body>
     <nav class="navbar">
@@ -88,7 +89,7 @@
                     </div>
                     <div>
                         <h4 style="margin-bottom: 0.2rem;">Email Us</h4>
-                        <p style="color: var(--text-gray); font-size: 0.9rem;">support@citizenvoice.com</p>
+                        <p style="color: var(--text-gray); font-size: 0.9rem;">niwemugeniadeline98@gmail.com</p>
                     </div>
                 </div>
                 <div class="glass-container" style="display: flex; align-items: center; gap: 1.5rem; padding: 1.5rem;">
@@ -97,7 +98,7 @@
                     </div>
                     <div>
                         <h4 style="margin-bottom: 0.2rem;">Call Us</h4>
-                        <p style="color: var(--text-gray); font-size: 0.9rem;">+251 912 345 678</p>
+                        <p style="color: var(--text-gray); font-size: 0.9rem;">+250 790 084 738</p>
                     </div>
                 </div>
                 <div class="glass-container" style="display: flex; align-items: center; gap: 1.5rem; padding: 1.5rem;">
@@ -106,34 +107,37 @@
                     </div>
                     <div>
                         <h4 style="margin-bottom: 0.2rem;">Office Location</h4>
-                        <p style="color: var(--text-gray); font-size: 0.9rem;">Admin Tower, 4th Floor, City Square</p>
+                        <p style="color: var(--text-gray); font-size: 0.9rem;">Karongi / Kiniha</p>
                     </div>
                 </div>
             </div>
             <div class="glass-container">
-                <form onsubmit="event.preventDefault(); alert('Message sent successfully!')">
+                <form action="complaint" method="post">
+                    <input type="hidden" name="action" value="contact_message">
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem;">
                         <div class="form-group">
                             <label>Name</label>
-                            <input type="text" placeholder="John Doe">
+                            <input type="text" name="name" placeholder="John Doe" required>
                         </div>
                         <div class="form-group">
                             <label>Email</label>
-                            <input type="email" placeholder="john@example.com">
+                            <input type="email" name="email" placeholder="john@example.com" required>
                         </div>
                     </div>
                     <div class="form-group">
                         <label>Message</label>
-                        <textarea rows="5" placeholder="How can we help you?"></textarea>
+                        <textarea name="message" rows="5" placeholder="How can we help you?" required></textarea>
                     </div>
                     <button type="submit" class="btn btn-primary" style="width: 100%;">Send Message</button>
                 </form>
             </div>
         </div>
+
+        </div>
     </section>
 
     <footer class="footer">
-        <p>&copy; 2024 Citizen Voice. Empowering communities through transparency.</p>
+        <p>&copy; 2026 Citizen Voice. Empowering communities through transparency.</p>
         <div class="footer-links">
             <a href="#"><i class="fa-brands fa-facebook"></i></a>
             <a href="#"><i class="fa-brands fa-twitter"></i></a>
@@ -144,5 +148,29 @@
             Designed for Citizen Voice Practical Project
         </div>
     </footer>
+
+    <script>
+        // Check for message parameters in URL
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('msg') === 'sent') {
+            Swal.fire({
+                icon: 'success',
+                title: 'Message Sent!',
+                text: 'Thank you for reaching out. Our team will get back to you soon.',
+                background: '#1e293b',
+                color: '#fff',
+                confirmButtonColor: '#6366f1'
+            });
+        } else if (urlParams.get('error') === 'failed') {
+            Swal.fire({
+                icon: 'error',
+                title: 'Oops...',
+                text: 'Something went wrong. Please try again later.',
+                background: '#1e293b',
+                color: '#fff',
+                confirmButtonColor: '#6366f1'
+            });
+        }
+    </script>
 </body>
 </html>

@@ -64,6 +64,27 @@ public class AdminServlet extends HttpServlet {
             } else {
                 response.sendRedirect("admin_dashboard.jsp?error=user_delete_failed");
             }
+        } else if ("replyMessage".equals(action)) {
+            int id = Integer.parseInt(request.getParameter("id"));
+            String reply = request.getParameter("reply");
+            System.out.println("[DEBUG] AdminServlet: Attempting to reply to message ID " + id);
+            
+            com.example.dao.MessageDAO msgDAO = new com.example.dao.MessageDAO();
+            if (msgDAO.replyToMessage(id, reply)) {
+                System.out.println("[DEBUG] AdminServlet: Reply sent successfully for ID " + id);
+                response.sendRedirect("admin_dashboard.jsp?msg=replied");
+            } else {
+                System.err.println("[ERROR] AdminServlet: Failed to send reply for ID " + id);
+                response.sendRedirect("admin_dashboard.jsp?error=reply_failed");
+            }
+        } else if ("delete_inquiry".equals(action)) {
+            int id = Integer.parseInt(request.getParameter("id"));
+            com.example.dao.MessageDAO msgDAO = new com.example.dao.MessageDAO();
+            if (msgDAO.deleteMessage(id)) {
+                response.sendRedirect("admin_dashboard.jsp?msg=inquiry_deleted");
+            } else {
+                response.sendRedirect("admin_dashboard.jsp?error=inquiry_delete_failed");
+            }
         }
     }
 

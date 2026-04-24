@@ -1,8 +1,10 @@
 <%@ page import="com.example.model.Admin" %>
 <%@ page import="com.example.dao.ComplaintDAO" %>
 <%@ page import="com.example.dao.UserDAO" %>
+<%@ page import="com.example.dao.MessageDAO" %>
 <%@ page import="com.example.model.Complaint" %>
 <%@ page import="com.example.model.User" %>
+<%@ page import="com.example.model.Message" %>
 <%@ page import="java.util.List" %>
 <% 
     Admin admin = (Admin) session.getAttribute("admin"); 
@@ -27,6 +29,10 @@
     }
     List<Complaint> recentlyUpdated = dao.getRecentlyModifiedComplaints();
     
+    MessageDAO msgDAO = new MessageDAO();
+    List<Message> allMessages = msgDAO.getAllMessages();
+    int unreadMessages = msgDAO.getUnreadCount();
+    
     int total = complaints.size();
     int pending = 0;
     int inProgress = 0;
@@ -50,6 +56,7 @@
     <!-- Anti-cache versioning to ensure styles are updated immediately -->
     <link rel="stylesheet" href="css/style.css?v=<%= System.currentTimeMillis() %>">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 
 <body>
@@ -84,6 +91,14 @@
                     </button>
                     <button onclick="document.getElementById('activityModal').style.display='block'" class="btn btn-primary" style="background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3); color: #6ee7b7;">
                         <i class="fa-solid fa-clock-rotate-left"></i> System Activity
+                    </button>
+                    <button onclick="document.getElementById('messagesModal').style.display='block'" class="btn btn-primary" style="background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.3); color: #fbbf24; position: relative;">
+                        <i class="fa-solid fa-envelope"></i> Inquiries
+                        <% if(unreadMessages > 0) { %>
+                            <span style="position: absolute; top: -8px; right: -8px; background: var(--danger); color: white; width: 22px; height: 22px; border-radius: 50%; font-size: 0.75rem; display: flex; align-items: center; justify-content: center; border: 2px solid var(--bg-dark); animation: pulse 2s infinite;">
+                                <%= unreadMessages %>
+                            </span>
+                        <% } %>
                     </button>
                 </div>
             </div>
@@ -201,14 +216,17 @@
                                                     <option value="Resolved" <%="Resolved".equals(c.getStatus()) ? "selected" : "" %>>Resolved</option>
                                                     <option value="Rejected" <%="Rejected".equals(c.getStatus()) ? "selected" : "" %>>Rejected</option>
                                                 </select>
-                                                <div style="display: flex; gap: 0.3rem;">
-                                                    <input type="text" name="notes" class="status-select" placeholder="Resolution notes..." value="<%= c.getResolutionNotes() != null ? c.getResolutionNotes() : "" %>" style="width: 130px; font-size: 0.8rem;">
-                                                    <button type="submit" class="btn btn-update" title="Update Status">
-                                                        <i class="fa-solid fa-arrows-rotate"></i>
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        </form>
+                                                 <div style="display: flex; flex-direction: column; gap: 0.3rem; margin-top: 0.5rem;">
+                                                     <label style="font-size: 0.7rem; margin: 0; opacity: 0.6;">Resolution Notes:</label>
+                                                     <div style="display: flex; gap: 0.3rem;">
+                                                         <textarea name="notes" class="status-select" placeholder="Enter notes..." style="width: 130px; font-size: 0.8rem; height: 60px; border-radius: 8px; resize: none;"><%= c.getResolutionNotes() != null ? c.getResolutionNotes() : "" %></textarea>
+                                                         <button type="submit" class="btn btn-update" title="Save Changes" style="height: 60px;">
+                                                             <i class="fa-solid fa-floppy-disk"></i>
+                                                         </button>
+                                                     </div>
+                                                 </div>
+                                             </div>
+                                         </form>
                                     </td>
                                 </tr>
                             <% } if(complaints.isEmpty()) { %>
@@ -355,8 +373,65 @@
         </div>
     </div>
 
+    <!-- Community Inquiries Modal -->
+    <div id="messagesModal" class="modal">
+        <div class="modal-content glass-container" style="max-width: 800px;">
+            <span class="close-btn" onclick="document.getElementById('messagesModal').style.display='none'">&times;</span>
+            <h2 style="margin-bottom: 1.5rem; color: #fbbf24;"><i class="fa-solid fa-envelope-open-text"></i> Community Inquiries</h2>
+            <p style="color: var(--text-gray); margin-bottom: 1.5rem;">Questions and feedback sent via the public landing page contact form.</p>
+            <div style="max-height: 500px; overflow-y: auto; padding-right: 10px;">
+                <% for(Message m : allMessages) { %>
+                    <div class="glass-container" style="margin-bottom: 1rem; border-left: 4px solid <%= m.isRead() ? "rgba(255,255,255,0.1)" : "#fbbf24" %>; background: rgba(255,255,255,0.03);">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.8rem;">
+                            <div>
+                                <strong style="font-size: 1.1rem; color: #fff;"><%= m.getName() %></strong>
+                                <br>
+                                <small style="color: var(--text-gray);"><i class="fa-solid fa-at"></i> <%= m.getEmail() %></small>
+                            </div>
+                            <div style="display: flex; gap: 0.8rem; align-items: center;">
+                                <small style="color: var(--text-gray); font-size: 0.8rem;"><%= m.getCreatedAt() %></small>
+                                <a href="admin?action=delete_inquiry&id=<%= m.getId() %>" 
+                                   onclick="return confirm('Delete this inquiry permanently?')"
+                                   class="btn-icon" style="width: 28px; height: 28px; font-size: 0.75rem; background: rgba(239, 68, 68, 0.1); color: var(--danger);" title="Delete Inquiry">
+                                    <i class="fa-solid fa-trash-can"></i>
+                                </a>
+                            </div>
+                        </div>
+                        <p style="color: var(--text-gray); line-height: 1.5; font-style: italic;">"<%= m.getMessage() %>"</p>
+                        
+                        <% if(m.getReplyMessage() != null && !m.getReplyMessage().isEmpty()) { %>
+                            <div style="margin-top: 1rem; padding: 1rem; background: rgba(16, 185, 129, 0.1); border-radius: 10px; border-left: 3px solid #10b981;">
+                                <strong style="color: #6ee7b7; font-size: 0.8rem; text-transform: uppercase;">Current Admin Response:</strong>
+                                <p style="color: #d1d5db; font-size: 0.95rem; margin-top: 0.5rem;"><%= m.getReplyMessage() %></p>
+                                <small style="display: block; margin-top: 0.5rem; opacity: 0.6; font-size: 0.75rem;"><%= m.getRepliedAt() %></small>
+                            </div>
+                        <% } %>
+
+                        <div style="margin-top: 1.5rem; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 1rem;">
+                            <form action="admin" method="post">
+                                <input type="hidden" name="action" value="replyMessage">
+                                <input type="hidden" name="id" value="<%= m.getId() %>">
+                                <div class="form-group">
+                                    <label style="font-size: 0.75rem; color: var(--text-gray); margin-bottom: 0.5rem; display: block;">
+                                        <%= (m.getReplyMessage() != null && !m.getReplyMessage().isEmpty()) ? "Update your reply:" : "Write your reply:" %>
+                                    </label>
+                                    <textarea name="reply" rows="2" placeholder="Type your reply to the citizen..." required style="background: rgba(0,0,0,0.2);"><%= m.getReplyMessage() != null ? m.getReplyMessage() : "" %></textarea>
+                                </div>
+                                <button type="submit" class="btn btn-primary" style="padding: 0.5rem 1.2rem; font-size: 0.85rem; background: #fbbf24; color: #1e293b; font-weight: bold; border: none;">
+                                    <i class="fa-solid fa-reply"></i> <%= (m.getReplyMessage() != null && !m.getReplyMessage().isEmpty()) ? "Update Response" : "Send Reply" %>
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                <% } if(allMessages.isEmpty()) { %>
+                    <div class="empty-state">No inquiries received yet.</div>
+                <% } %>
+            </div>
+        </div>
+    </div>
+
     <footer class="footer">
-        <p>&copy; 2024 Citizen Voice. Administrative Control Panel.</p>
+        <p>&copy; 2026 Citizen Voice. Administrative Control Panel.</p>
         <div class="footer-links">
             <span><i class="fa-solid fa-shield-halved"></i> System Admin Mode</span>
             <span><i class="fa-solid fa-server"></i> v1.8 Stable Release</span>
@@ -378,6 +453,49 @@
             if (event.target.className === 'modal') {
                 event.target.style.display = 'none';
             }
+        }
+
+        // Feedback System
+        const urlParams = new URLSearchParams(window.location.search);
+        const msg = urlParams.get('msg');
+        const error = urlParams.get('error');
+
+        if (msg === 'replied') {
+            Swal.fire({
+                icon: 'success',
+                title: 'Reply Sent!',
+                text: 'Your response has been delivered to the citizen.',
+                background: '#1e293b',
+                color: '#fff',
+                confirmButtonColor: '#fbbf24'
+            });
+        } else if (msg === 'updated') {
+            Swal.fire({
+                icon: 'success',
+                title: 'Complaint Updated',
+                text: 'The complaint status and notes have been saved.',
+                background: '#1e293b',
+                color: '#fff',
+                confirmButtonColor: '#6366f1'
+            });
+        } else if (msg === 'inquiry_deleted') {
+            Swal.fire({
+                icon: 'success',
+                title: 'Inquiry Removed',
+                text: 'The inquiry has been deleted from the system.',
+                background: '#1e293b',
+                color: '#fff',
+                confirmButtonColor: '#ef4444'
+            });
+        } else if (error) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Operation Failed',
+                text: 'Something went wrong. Please try again.',
+                background: '#1e293b',
+                color: '#fff',
+                confirmButtonColor: '#ef4444'
+            });
         }
     </script>
 </body>
