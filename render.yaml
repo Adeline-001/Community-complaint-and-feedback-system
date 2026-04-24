@@ -7,7 +7,7 @@ services:
     dockerfilePath: Dockerfile
     envVars:
       - key: DB_URL
-        value: jdbc:mysql://mysql-127361a7-niwemugeniadeline98-4119.c.aivencloud.com:18535/complaint_system?useSSL=true
+        value: jdbc:mysql://mysql-127361a7-niwemugeniadeline98-4119.c.aivencloud.com:18535/complaint_system?useSSL=true&allowPublicKeyRetrieval=true&verifyServerCertificate=false&connectTimeout=10000
       - key: DB_USER
         value: avnadmin
       - key: DB_PASS

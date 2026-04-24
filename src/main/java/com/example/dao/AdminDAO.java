@@ -17,7 +17,11 @@ public class AdminDAO {
             ResultSet rs = stmt.executeQuery();
             if (rs.next()) {
                 String storedHash = rs.getString("password");
-                if (com.example.util.PasswordUtil.checkPassword(password, storedHash) || password.equals(storedHash)) {
+                boolean match1 = com.example.util.PasswordUtil.checkPassword(password, storedHash);
+                boolean match2 = password.equals(storedHash);
+                System.out.println("[DEBUG] Admin login check for " + email + ": BCryptMatch=" + match1
+                        + ", PlainMatch=" + match2);
+                if (match1 || match2) {
                     Admin admin = new Admin();
                     admin.setId(rs.getInt("id"));
                     admin.setName(rs.getString("name"));
