@@ -12,6 +12,9 @@ WORKDIR /usr/local/tomcat/webapps/
 # Remove default Tomcat apps to speed up startup
 RUN rm -rf ./ROOT ./examples ./docs ./manager ./host-manager
 
+# Disable the shutdown port to prevent Render health-check warnings (hitting port 8005)
+RUN sed -i 's/port="8005" shutdown="SHUTDOWN"/port="-1" shutdown="SHUTDOWN"/' /usr/local/tomcat/conf/server.xml
+
 # Copy the built WAR from the build stage and rename it to ROOT.war
 COPY --from=build /app/target/*.war ./ROOT.war
 

@@ -9,10 +9,13 @@ import java.security.Key;
 import java.util.Date;
 
 public class JwtUtil {
-    // 256-bit secret key for HS256 algorithm (In production, load this from environment variables)
-    private static final String SECRET_KEY_STRING = "MySuperSecretKeyForCommunityComplaintSystem2026";
+    // 256-bit secret key for HS256 algorithm (Load from environment variables for
+    // production security)
+    private static final String SECRET_KEY_STRING = System.getenv("JWT_SECRET") != null
+            ? System.getenv("JWT_SECRET")
+            : "MySuperSecretKeyForCommunityComplaintSystem2026";
     private static final Key SECRET_KEY = Keys.hmacShaKeyFor(SECRET_KEY_STRING.getBytes());
-    
+
     // Token validity: 24 hours
     private static final long EXPIRATION_TIME = 86400000;
 

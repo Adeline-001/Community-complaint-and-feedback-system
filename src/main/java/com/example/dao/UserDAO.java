@@ -18,15 +18,16 @@ public class UserDAO {
             stmt.setString(3, user.getPassword());
             stmt.setString(4, user.getPhone());
             stmt.setString(5, user.getAddress());
-            
-            System.out.println("[DEBUG] PreparedStatement ready. Executing insert...");
+
+            System.out.println("[DEBUG] PreparedStatement ready. Executing insert for: " + user.getEmail());
             int rows = stmt.executeUpdate();
             System.out.println("[DEBUG] Insert finished. Rows affected: " + rows);
             return rows > 0;
         } catch (SQLException e) {
+            System.err.println("[ERROR] Registration Failed for email: " + user.getEmail());
             System.err.println("[ERROR] MySQL Error Code: " + e.getErrorCode());
             System.err.println("[ERROR] MySQL SQL State: " + e.getSQLState());
-            System.err.println("[ERROR] Registration Failed: " + e.getMessage());
+            System.err.println("[ERROR] Error Message: " + e.getMessage());
             e.printStackTrace();
             return false;
         }
@@ -52,6 +53,10 @@ public class UserDAO {
                 }
             }
         } catch (SQLException e) {
+            System.err.println("[ERROR] Login authentication failed for email: " + email);
+            System.err.println("[ERROR] MySQL Error Code: " + e.getErrorCode());
+            System.err.println("[ERROR] SQL State: " + e.getSQLState());
+            System.err.println("[ERROR] Message: " + e.getMessage());
             e.printStackTrace();
         }
         return null;
