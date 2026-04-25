@@ -140,6 +140,7 @@ public class AuthServlet extends HttpServlet {
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         String action = request.getParameter("action");
+        String test = request.getParameter("test");
         if ("register-admin".equals(action)) {
             String name = request.getParameter("name");
             String email = request.getParameter("email");
@@ -161,7 +162,6 @@ public class AuthServlet extends HttpServlet {
             return;
         }
 
-        String action = request.getParameter("action");
         if ("list-users".equals(action)) {
             sendUserList(response);
             return;

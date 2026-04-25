@@ -11,7 +11,6 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -34,9 +33,10 @@ class ComplaintDAOTest {
 
         mockedDBConnection = mockStatic(DBConnection.class);
         mockedDBConnection.when(DBConnection::getConnection).thenReturn(mockConnection);
-        
+
         when(mockConnection.prepareStatement(anyString())).thenReturn(mockPreparedStatement);
-        when(mockConnection.prepareStatement(anyString(), anyInt())).thenReturn(mockPreparedStatement); // for generated keys
+        when(mockConnection.prepareStatement(anyString(), anyInt())).thenReturn(mockPreparedStatement); // for generated
+                                                                                                        // keys
 
         complaintDAO = new ComplaintDAO();
     }
