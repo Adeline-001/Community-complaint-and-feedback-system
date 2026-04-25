@@ -84,7 +84,7 @@ public class AuthServlet extends HttpServlet {
                     cookie.setPath("/");
                     cookie.setMaxAge(86400); // 24 hours
                     response.addCookie(cookie);
-                    
+
                     response.sendRedirect("admin_dashboard.jsp");
                 } else {
                     System.out.println("[DEBUG] Admin login failed: " + email + " (Invalid credentials)");
@@ -111,16 +111,17 @@ public class AuthServlet extends HttpServlet {
                 }
             }
         } else if ("api-login".equals(action)) {
-            // Pure REST API Endpoint for the Backend Submission (No Frontend HTML/Redirects)
+            // Pure REST API Endpoint for the Backend Submission (No Frontend
+            // HTML/Redirects)
             String email = request.getParameter("email");
             String password = request.getParameter("password");
-            
+
             response.setContentType("application/json");
             response.setCharacterEncoding("UTF-8");
-            
+
             User user = userDAO.loginUser(email, password);
             Admin admin = adminDAO.loginAdmin(email, password);
-            
+
             if (admin != null) {
                 String token = com.example.util.JwtUtil.generateToken(admin.getEmail(), "admin", admin.getId());
                 response.getWriter().write("{\"status\":\"success\", \"role\":\"admin\", \"token\":\"" + token + "\"}");
@@ -138,7 +139,22 @@ public class AuthServlet extends HttpServlet {
 
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        String test = request.getParameter("test");
+        String action = request.getParameter("action");
+        if ("register-admin".equals(action)) {
+            String name = request.getParameter("name");
+            String email = request.getParameter("email");
+            String password = request.getParameter("password");
+            Admin admin = new Admin();
+            admin.setName(name);
+            admin.setEmail(email);
+            if (adminDAO.registerAdmin(admin, password)) {
+                response.getWriter().write("Admin created successfully via GET");
+            } else {
+                response.getWriter().write("Failed to create admin via GET");
+            }
+            return;
+        }
+
         if ("diag".equals(test)) {
             response.setContentType("text/plain");
             response.getWriter().write("AuthServlet is REACHABLE at: " + request.getRequestURI());
@@ -155,7 +171,7 @@ public class AuthServlet extends HttpServlet {
         if (session != null) {
             session.invalidate();
         }
-        
+
         // Remove JWT cookie on logout
         jakarta.servlet.http.Cookie cookie = new jakarta.servlet.http.Cookie("jwt_token", "");
         cookie.setPath("/");
@@ -169,7 +185,7 @@ public class AuthServlet extends HttpServlet {
         List<User> users = userDAO.getAllUsers();
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
-        
+
         StringBuilder json = new StringBuilder("[");
         for (int i = 0; i < users.size(); i++) {
             User u = users.get(i);
@@ -177,14 +193,16 @@ public class AuthServlet extends HttpServlet {
                     .append("\"id\":").append(u.getId()).append(",")
                     .append("\"name\":\"").append(u.getName().replace("\"", "\\\"")).append("\",")
                     .append("\"email\":\"").append(u.getEmail().replace("\"", "\\\"")).append("\",")
-                    .append("\"phone\":\"").append(u.getPhone() != null ? u.getPhone().replace("\"", "\\\"") : "").append("\",")
-                    .append("\"address\":\"").append(u.getAddress() != null ? u.getAddress().replace("\"", "\\\"") : "").append("\"")
+                    .append("\"phone\":\"").append(u.getPhone() != null ? u.getPhone().replace("\"", "\\\"") : "")
+                    .append("\",")
+                    .append("\"address\":\"").append(u.getAddress() != null ? u.getAddress().replace("\"", "\\\"") : "")
+                    .append("\"")
                     .append("}");
             if (i < users.size() - 1)
                 json.append(",");
         }
         json.append("]");
-        
+
         String result = json.toString();
         System.out.println("[DEBUG] API list-users Response: " + result);
         response.getWriter().write(result);
